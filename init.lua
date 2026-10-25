@@ -351,11 +351,11 @@ minetest.register_craftitem("smokeleaf_industries:blunt", {
 	stack_max = 64,
 	groups = {flammable = 3, smoking_item = 1},
 	on_use = function(itemstack, user, pointed_thing)
-		minetest.sound_play("smokeleaf_industries_smoke", {
-			pos = user:get_pos(),
-			max_hear_distance = 16,
-			gain = 0.5,
-		})
+---		minetest.sound_play("smokeleaf_industries_smoke", {
+---			pos = user:get_pos(),	
+---			max_hear_distance = 16,
+---			gain = 0.5,
+---		})
 		user:get_meta():set_int("smokeleaf_high_time", 400)
 		itemstack:take_item()
 		return itemstack
