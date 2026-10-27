@@ -226,5 +226,5 @@ If using textures from other sources:
 ---
 
 **Last Updated**: October 2026
-**Status**: Complete texture specification
+**Status**: Texture specification for Luanti port v1.0.4
 **Total Required Textures**: ~70+ PNG files

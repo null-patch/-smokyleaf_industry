@@ -1,241 +1,35 @@
-# Smokeleaf Industries - Changelog
+# Changelog
 
-All notable changes to this project will be documented in this file.
+## 1.0.4
+- Fixed Processing Machine and Drying Rack formspec element ordering and inventory screen sizing so the GUI is not collapsed into a thin line.
+- Added optional Elepower PAPI integration for the Processing Machine and both grow lights.
+- Processing Machine consumes 64 EU per successful process and displays its stored power.
+- LED and HPS lights consume 8 EU/s and 16 EU/s, respectively, while enabled; they remain off until powered when Elepower is installed.
+- Added new v1.0.4 migration IDs to refresh formspecs on existing blocks without resetting their inventories.
+- Kept the Drying Rack unpowered to preserve its passive-drying behaviour from the Forge source.
 
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
-and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.0.0] - 2026-10-26
+## 1.0.3 - GUI clarity, recipe parity, and crop-growth fixes
 
-### Added
+- Rebuilt the Processing Machine screen with visible inventory-slot backplates, high-contrast panels, readable recipe hints, and input/output cycling.
+- Added a 12-slot Drying Rack GUI, filtered inventory access, persistent contents, automatic bud/tobacco drying, and item drops when the rack is broken.
+- Added dried tobacco leaves; drying durations match the original recipe values (about 60 seconds for generic buds and 15 seconds for tobacco leaves).
+- Added ceiling mounting, ON/OFF variants, separate light levels/textures, protection checks, and periodic crop acceleration to LED/HPS lights.
+- Matched the original Forge 3x3 joint/blunt ingredient patterns in the Processing Machine while retaining the port's simple compatibility recipes.
+- Bumped migration IDs to v1.0.3 so previously initialized machines and racks receive the updated formspecs.
+- Fixed Lua loop-capture issues that could cause seeds or growth callbacks to use the wrong strain/stage.
+- Added migration LBMs for machines and racks already placed in existing worlds.
+- Added Grow Pot to the soil group and retained planting seeds directly on top of it.
 
-#### Core Features
-- **25 Weed Strains** with unique properties:
-  - Purple Kush, Northern Lights, Grandmaster Flash
-  - Strawberry Cough, Critical Mass
-  - Sour Diesel, Jack Herer, Green Crack
-  - Pineapple Express, Durban Poison
-  - OG Kush, Blue Dream, Girl Scout Cookies
-  - Gorilla Glue, White Widow
-  - Chemdawg, AK-47, Amnesia Haze
-  - Super Lemon Haze, Trainwreck
-  - Skywalker OG, Bruce Banner, Wedding Cake
-  - Midnight Express, Cherry Pie
+## 1.0.1 - Seed placement and texture fixes
 
-- **Plant Growth System**:
-  - 8-stage growth progression for all plants
-  - Light-level dependent growth
-  - ABM-based natural growth cycles
-  - Strain-specific growth times (65-108 minutes)
+- Fixed seed placement on dirt, grass, farmland, common farming soil nodes, and Grow Pot.
+- Corrected block face textures for Grow Pot, Drying Rack, grow lights, and Processing Machine.
+- Added the initial Processing Machine formspec and recipe handler.
 
-- **Hemp Cultivation**:
-  - Full lifecycle from seeds to fiber
-  - Hemp fiber processing
-  - Hemp rope crafting
-  - Hemp oil production
+## 1.0.0 - Initial Luanti port
 
-- **Tobacco Farming**:
-  - Tobacco plant growth
-  - Leaf harvesting
-  - Tobacco leaf items for crafting
+- Added strain crops, seeds, hemp and tobacco cultivation, base items, blocks, and crafting recipes.
+- Added initial grow light, Grow Pot, Drying Rack, and Processing Machine support.
 
-- **Infrastructure Blocks**:
-  - LED Grow Light (light level 12)
-  - HPS Grow Light (light level 14)
-  - Grow Pot for indoor growing
-  - Drying Rack for post-harvest processing
-  - Processing Machine for advanced crafting
-
-- **Consumable Items**:
-  - Joints (rolled weed + paper)
-  - Blunts (weed + tobacco)
-  - Hash (concentrated buds)
-  - Glass Bong
-  - Grinder
-
-- **Crafting Recipes**:
-  - 25 strain-specific joint recipes
-  - 25 strain-specific blunt recipes
-  - Hemp rope from hemp fiber
-  - Hash from concentrated buds
-  - Drying recipes for fresh buds
-
-- **Items & Drops**:
-  - Weed buds (fresh and dried)
-  - Hemp seeds and fiber
-  - Tobacco seeds and leaves
-  - All crafting materials
-
-- **Effects System**:
-  - Relaxation, Sleep, Happiness, Energy, Focus, Creativity, Pain Relief
-  - Strain-specific effect combinations
-  - Player metadata tracking for effect duration
-  - Potency scaling based on strain
-
-- **Documentation**:
-  - Comprehensive README.md
-  - Installation guide (INSTALL.md)
-  - Texture specifications (textures/README.md)
-  - API documentation in code
-  - Changelog (this file)
-
-- **Utilities**:
-  - Texture generator script (Python)
-  - Git-compatible project structure
-  - MIT License for distribution
-  - Localization support (minetest.get_translator)
-
-### Technical
-
-- **Node Registrations**: 200 plant nodes (25 strains × 8 stages)
-- **Item Registrations**: 95 craftitems
-- **Block Registrations**: 6 infrastructure blocks
-- **Crafting Recipes**: 75+ shaped/shapeless recipes
-- **ABMs**: 3 active block modifiers for plant growth
-- **API Functions**: 5 public helper functions
-- **Lua API Compliance**: Full Luanti 5.7+ compatibility
-
-### Documentation
-
-- mod.conf with proper metadata
-- README with features, installation, and guides
-- INSTALL.md with troubleshooting
-- Detailed texture specifications
-- License (MIT)
-- This changelog
-
-### Compatibility
-
-- **Minimum Version**: Luanti 5.7.0
-- **Recommended Version**: Luanti 5.8.0+
-- **Optional Dependencies**: default, farming mods
-- **Conflicts**: None known
-
-## Future Versions
-
-### [1.1.0] - Planned
-
-- [ ] Villager trader NPCs
-- [ ] Dealer and Stoner villagers with trades
-- [ ] Advanced potion effects system
-- [ ] Genetic breeding system for strains
-- [ ] Disease and pest mechanics
-- [ ] Modpack support improvements
-
-### [1.2.0] - Planned
-
-- [ ] Seasons integration
-- [ ] Weather-dependent growth
-- [ ] Hydroponics system
-- [ ] Advanced greenhouse mechanics
-- [ ] Custom particle effects for smoking
-- [ ] Achievement/trophy system
-
-### [1.3.0] - Planned
-
-- [ ] Mod storage for farm data persistence
-- [ ] Player skill progression
-- [ ] Economy integration with other mods
-- [ ] Territory/land claim support
-- [ ] Multi-block machines with GUIs
-- [ ] Automation possibilities
-
-### [2.0.0] - Long Term
-
-- [ ] 3D plant models (if Luanti supports)
-- [ ] Animated growth sequences
-- [ ] Full physics modification for effects
-- [ ] Multiplayer trading system
-- [ ] Raid/farming risk mechanics
-- [ ] Complete economy overhaul
-
-## Known Issues
-
-- None in initial release
-- Texture generation requires Python 3.6+ with PIL
-- Some Minecraft-specific mechanics adapted for Luanti
-- Bong mechanics simplified (no complex animations yet)
-
-## Migration Guide
-
-### From Previous Versions
-
-#### 0.9 → 1.0
-- Fresh install required (mod didn't exist)
-- No migration needed
-- World compatible with no prior data
-
-## Removed (N/A for 1.0)
-
-No features removed in initial release.
-
-## Deprecated (N/A for 1.0)
-
-No deprecated features in initial release.
-
-## Breaking Changes (N/A for 1.0)
-
-No breaking changes in initial release.
-
-## Development Notes
-
-### Architecture Decisions
-
-1. **ABM-based Growth**: Chosen over node timers for efficiency across many plants
-2. **Metadata for Effects**: Uses player metadata rather than status effects
-3. **Simplified Processing**: Manual crafting instead of GUI-based machines
-4. **Texture Placeholder Generator**: Python script for quick testing
-5. **No Dependencies**: Optional defaults/farming for compatibility
-
-### Performance Considerations
-
-- ABM interval tuned for 100+ TPS servers
-- Light checks prevent unnecessary growth processing
-- Efficient node registration (single registration per plant type)
-- Lazy loading of strain data
-- No expensive loops in main tick
-
-### Future Architecture Plans
-
-- Move to GUI-based machines with inventories
-- Integration with Luanti's mod storage API
-- Optional MineClone2 compatibility
-- Server-side villager trading system
-- WebUI for farm statistics
-
-## Credits
-
-### Original Work
-
-- **Minecraft Mod**: Micaxs - SmokeleafIndustries (NeoForge)
-- **Luanti Port**: Community Development
-
-### Contributors
-
-- Texture artists (pending)
-- Translators (pending)
-- Testers and debuggers (pending)
-
-### Acknowledgments
-
-- Luanti (Minetest) development team
-- ContentDB platform
-- Modding community feedback
-
-## Links
-
-- **GitHub**: https://github.com/luanti-org/smokeleaf_industries
-- **ContentDB**: https://content.luanti.org/packages/smokeleaf_industries
-- **Documentation**: https://luanti.org/docs/mod/smokeleaf_industries
-- **Forum Discussion**: https://github.com/minetest/minetest/discussions
-
-## License
-
-This project is licensed under the MIT License - see LICENSE file for details.
-
----
-
-**Last Updated**: October 26, 2026
-**Current Version**: 1.0.0
-**Next Release Target**: December 2026
-**Maintenance Status**: Active Development
+> Scope note: the Lua mod does not yet reproduce every separate machine and advanced subsystem in the original NeoForge source.

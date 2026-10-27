@@ -1,6 +1,6 @@
 # Smokeleaf Industries - Luanti Mod
 
-A comprehensive cannabis cultivation mod for Luanti (formerly Minetest), ported from the original Minecraft NeoForge mod. Build your own weed empire with 25 unique strains, advanced growing systems, crafting mechanics, and more!
+A Luanti (formerly Minetest) adaptation of Smokeleaf Industries, inspired by the original Minecraft NeoForge mod. This release includes 25 strain crops, seed planting, Grow Pot planting, ceiling-mounted ON/OFF grow lights, drying-rack processing, and a basic machine GUI. It is a feature-limited port, not a complete conversion of every Forge machine or advanced power/strain subsystem.
 
 ## Features
 
@@ -27,7 +27,7 @@ A comprehensive cannabis cultivation mod for Luanti (formerly Minetest), ported 
   - LED and HPS Grow Lights for optimal cultivation
   - Grow Pots for indoor growing
   - Drying Racks for post-harvest processing
-  - Processing Machine for advanced crafting
+  - Processing Machine with an input/output GUI for drying buds and processing supported recipes
 
 ### Items & Consumables
 - Dried Buds (all strains)
@@ -86,24 +86,24 @@ A comprehensive cannabis cultivation mod for Luanti (formerly Minetest), ported 
 ## Basic Progression
 
 1. **Obtain Seeds** - Craft or find weed seeds for your chosen strain
-2. **Plant** - Place seeds on farmland with adequate lighting
+2. **Plant** - Place seeds on farmland, dirt, or directly on top of a Grow Pot with adequate lighting
 3. **Grow** - Wait for plants to mature through 8 growth stages
 4. **Harvest** - Break mature plants to collect buds
-5. **Dry** - Use Drying Rack to process buds
+5. **Dry and process** - Right-click the Drying Rack with an empty hand to open its 12-slot GUI. Place fresh strain buds or tobacco leaves into slots and wait, then collect dried items. The Processing Machine has a separate 3×3 input grid and output slots. With Elepower installed, connect it to an Elepower generator/network; each successful process consumes 64 EU.
 6. **Craft** - Create Joints, Blunts, or Hash for consumption
 7. **Smoke** - Right-click smoking items to activate effects
 
 ## Growth Requirements
 
-- **Light Level**: Minimum 13 light level required for growth
+- **Light Level**: Natural growth requires at least light level 13; active grow lights also periodically accelerate crops directly beneath them
 - **Soil**: Farmland, dirt, or grass blocks
 - **Time**: Varies by strain (65-108 minutes per stage)
 - **Water**: Available automatically near water blocks
 
 ## Lighting Options
 
-- **LED Grow Light** - Light level 12, efficient, good for multiple plants
-- **HPS Grow Light** - Light level 14, powerful, optimal growth boost
+- **LED Grow Light** - Mount directly beneath a solid ceiling, then right-click to enable; with Elepower installed, connect it to a power network. Active light level 12 and periodic crop-growth acceleration up to five blocks below
+- **HPS Grow Light** - Mount directly beneath a solid ceiling, then right-click to enable; with Elepower installed, connect it to a power network. Active light level 14 and the same crop-growth acceleration
 - **Natural Sunlight** - Free, requires outdoor farming
 
 ## Tips for Success
@@ -300,5 +300,18 @@ A: Yes, with progression from seeds → harvesting → crafting → consumption.
 ---
 
 **Last Updated**: October 2026
-**Version**: 1.0.0
-**Status**: Stable Release
+**Version**: 1.0.3
+**Status**: Updated port; in-game validation recommended
+
+
+## Grow Light and Drying Rack behavior (v1.0.4)
+
+- Right-click an LED or HPS Grow Light to switch it ON/OFF. OFF lights emit no light; ON lights use their on-state texture. Active lights periodically attempt to accelerate compatible weed, hemp, and tobacco crops in a 3x3 area up to five nodes beneath the lamp; opaque blocks in the crop column prevent acceleration.
+- Right-click the Drying Rack with an empty hand to open its 12-slot interface. It accepts fresh strain buds and tobacco leaves, one item per slot. Buds dry in about 60 seconds; tobacco leaves dry in about 15 seconds. Remove completed items from their slots.
+- The Grow Pot remains a plantable surface: use seeds on the top of the pot to place the crop in the space above it.
+- This release completes the GUI, rack-drying, and grow-light behavior represented by these current Lua blocks. It is not a full one-to-one port of every separate Forge machine and advanced power/strain subsystem in the original Java mod.
+
+
+## Elepower power support (v1.0.4)
+
+Elepower is optional. When `elepower_papi` is enabled, connect the Processing Machine and an enabled grow light to an Elepower power network using Elepower power conduits and a generator/storage node. The Processing Machine uses 64 EU per successful process. LED lights use 8 EU/s and HPS lights use 16 EU/s while enabled. Right-click a light to request power; it will switch off automatically if its buffer runs out, then resume after power is restored. The Drying Rack remains passive and does not need electricity. Without Elepower, the Processing Machine and lights work without a power network as before.
