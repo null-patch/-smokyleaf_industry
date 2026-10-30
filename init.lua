@@ -678,7 +678,8 @@ end
 
 local function register_grow_light(kind, label, texture_prefix, light_level)
 	local off_name = "smokyleaf_industry:grow_light_" .. kind
-	local on_name = off_name .. "_on"
+	local on_name = off_name .. "_active"
+	local legacy_on_name = off_name .. "_on"
 	local side_texture = "smokyleaf_industry_" .. texture_prefix .. "_side.png"
 	local off_texture = "smokyleaf_industry_" .. texture_prefix .. "_off.png"
 	local on_texture = "smokyleaf_industry_" .. texture_prefix .. "_on.png"
@@ -812,7 +813,7 @@ local function register_grow_light(kind, label, texture_prefix, light_level)
 		def.ele_capacity = capacity
 		def.ele_inrush = 32
 		def.ele_usage = usage
-		def.ele_active_node = on_name
+		def.ele_active_node = true
 		def.ele_no_automatic_ports = true
 		def.ele_active_nodedef = {
 			description = label .. S(" (Powered On)"),
@@ -828,6 +829,12 @@ local function register_grow_light(kind, label, texture_prefix, light_level)
 		on_def.light_source = light_level
 		on_def.groups.not_in_creative_inventory = 1
 		minetest.register_node(on_name, on_def)
+	end
+
+	-- v1.0.4 used the custom `_on` name. Preserve existing worlds by
+	-- transparently remapping saved nodes to the correctly registered variant.
+	if legacy_on_name ~= on_name and minetest.register_alias then
+		minetest.register_alias(legacy_on_name, on_name)
 	end
 end
 

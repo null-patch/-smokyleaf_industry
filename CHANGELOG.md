@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.0.5
+- Fixed an Elepower PAPI startup crash caused by passing a custom string to `ele_active_node`; the grow lights now use Elepower's supported automatic `_active` variant naming.
+- Kept grow-light ON/OFF state switching, active texture/light level, and power consumption linked to the registered active variant.
+- This is a Smokeleaf-side compatibility fix; Elepower's installed files do not need to be edited.
+- Added a node alias to migrate existing v1.0.4 grow lights saved under the old `_on` name to the new `_active` node.
+
 ## 1.0.4
 - Fixed Processing Machine and Drying Rack formspec element ordering and inventory screen sizing so the GUI is not collapsed into a thin line.
 - Added optional Elepower PAPI integration for the Processing Machine and both grow lights.
