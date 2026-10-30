@@ -1,41 +1,41 @@
 # Changelog
 
+## 1.0.6 — Original-style cultivation
+
+- Replaced fabricated per-strain growth timers with the original 11-age weed/hemp cycle and 7-age tobacco cycle.
+- Added the original two-block-tall weed/hemp form beginning at age 7.
+- Restored the original crop random-growth probability formula, soil/spacing growth-speed calculation, tobacco light threshold, and 3.5× natural hemp growth multiplier.
+- Added all 25 original strain presets with THC, CBD, N/P/K targets, and strain tint data.
+- Added the 17 original fertilizer items with their original N/P/K deltas, crop nutrient tracking, ±3 nutrient tolerance, potency adjustment, and harvest multipliers.
+- Added a Plant Analyzer formspec showing plant age, progress, potency, NPK targets, yield multiplier, and pH.
+- Restored Grow Pot soil insertion, direct seed planting, the 60-second farmland / 90-second other-soil growth cycle, fertilizer, bone meal (2–5 ages), mature harvesting without destroying the pot, and sneak-to-remove-soil behaviour.
+- Added original-style hemp shearing progression: three leaf harvests followed by a full crop harvest.
+- Added ceiling-mounted Reflectors with HPS and Dual Arc lamps, 15/45-minute lamp life, light level 15, and crop acceleration.
+- Corrected Grow Light acceleration to use the active node variants, original crop search volume, line-of-sight check, 100-tick cycle, and per-attempt growth probability.
+- Added new pixel-art icons/textures for fertilizer items, Plant Analyzer, Reflector, and replacement lamps.
+- Added migration for older stage-8 crops and old tobacco stage-8 nodes; retained aliases for earlier placeholder strain IDs.
+- Updated family-specific mature-stage helper functions.
+- Registered the missing Hemp Leaf harvest/shearing item and its pixel-art texture; added the original plural `hemp_fibers` compatibility alias.
+- Prevented seeds from replacing an existing Grow Pot crop, preserved creative-mode seed stacks, and kept Grow Pot field-planted crops at the original pH default.
+
 ## 1.0.5
 - Fixed an Elepower PAPI startup crash caused by passing a custom string to `ele_active_node`; the grow lights now use Elepower's supported automatic `_active` variant naming.
 - Kept grow-light ON/OFF state switching, active texture/light level, and power consumption linked to the registered active variant.
-- This is a Smokeleaf-side compatibility fix; Elepower's installed files do not need to be edited.
-- Added a node alias to migrate existing v1.0.4 grow lights saved under the old `_on` name to the new `_active` node.
+- Added a node alias for worlds that saved the older `_on` grow-light node name.
 
 ## 1.0.4
-- Fixed Processing Machine and Drying Rack formspec element ordering and inventory screen sizing so the GUI is not collapsed into a thin line.
-- Added optional Elepower PAPI integration for the Processing Machine and both grow lights.
-- Processing Machine consumes 64 EU per successful process and displays its stored power.
-- LED and HPS lights consume 8 EU/s and 16 EU/s, respectively, while enabled; they remain off until powered when Elepower is installed.
-- Added new v1.0.4 migration IDs to refresh formspecs on existing blocks without resetting their inventories.
-- Kept the Drying Rack unpowered to preserve its passive-drying behaviour from the Forge source.
+- Fixed Processing Machine and Drying Rack formspec element ordering and inventory screen sizing.
+- Added optional Elepower PAPI integration for the Processing Machine and Grow Lights.
+- Processing Machine consumes 64 EU per successful process; LED/HPS lights consume 8/16 EU per second while enabled.
 
+## 1.0.3
+- Added a 12-slot Drying Rack GUI, automatic drying, and persistent rack contents.
+- Improved Processing Machine GUI clarity and added basic recipes.
+- Added the initial powered grow-light implementation.
 
-## 1.0.3 - GUI clarity, recipe parity, and crop-growth fixes
+## 1.0.1
+- Fixed seed placement on dirt, grass, farmland, common farming soils, and Grow Pot.
+- Corrected block textures.
 
-- Rebuilt the Processing Machine screen with visible inventory-slot backplates, high-contrast panels, readable recipe hints, and input/output cycling.
-- Added a 12-slot Drying Rack GUI, filtered inventory access, persistent contents, automatic bud/tobacco drying, and item drops when the rack is broken.
-- Added dried tobacco leaves; drying durations match the original recipe values (about 60 seconds for generic buds and 15 seconds for tobacco leaves).
-- Added ceiling mounting, ON/OFF variants, separate light levels/textures, protection checks, and periodic crop acceleration to LED/HPS lights.
-- Matched the original Forge 3x3 joint/blunt ingredient patterns in the Processing Machine while retaining the port's simple compatibility recipes.
-- Bumped migration IDs to v1.0.3 so previously initialized machines and racks receive the updated formspecs.
-- Fixed Lua loop-capture issues that could cause seeds or growth callbacks to use the wrong strain/stage.
-- Added migration LBMs for machines and racks already placed in existing worlds.
-- Added Grow Pot to the soil group and retained planting seeds directly on top of it.
-
-## 1.0.1 - Seed placement and texture fixes
-
-- Fixed seed placement on dirt, grass, farmland, common farming soil nodes, and Grow Pot.
-- Corrected block face textures for Grow Pot, Drying Rack, grow lights, and Processing Machine.
-- Added the initial Processing Machine formspec and recipe handler.
-
-## 1.0.0 - Initial Luanti port
-
-- Added strain crops, seeds, hemp and tobacco cultivation, base items, blocks, and crafting recipes.
-- Added initial grow light, Grow Pot, Drying Rack, and Processing Machine support.
-
-> Scope note: the Lua mod does not yet reproduce every separate machine and advanced subsystem in the original NeoForge source.
+## 1.0.0
+- Initial Luanti port with strain items, crops, hemp, tobacco, Grow Pot, Grow Lights, Drying Rack, and Processing Machine.

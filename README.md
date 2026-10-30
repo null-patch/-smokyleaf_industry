@@ -1,317 +1,108 @@
-# Smokeleaf Industries - Luanti Mod
+# Smokeleaf Industries — Luanti
 
-A Luanti (formerly Minetest) adaptation of Smokeleaf Industries, inspired by the original Minecraft NeoForge mod. This release includes 25 strain crops, seed planting, Grow Pot planting, ceiling-mounted ON/OFF grow lights, drying-rack processing, and a basic machine GUI. It is a feature-limited port, not a complete conversion of every Forge machine or advanced power/strain subsystem.
+A Luanti adaptation of Smokeleaf Industries. Version **1.0.6** restores the original Forge cultivation progression and its core plant-care mechanics while retaining the existing Luanti processing blocks, Drying Rack, GUI, and Elepower integration.
 
-## Features
+This is an independent Lua implementation. It does not bundle the original Forge code or its assets.
 
-### Core Gameplay
-- **25 Unique Weed Strains**: Each with unique growth times, potency levels, effects, and yield characteristics
-  - Indica, Sativa, and Hybrid varieties
-  - Realistic growth mechanics with varied maturation times
-  - Custom effects system
+## Cultivation in v1.0.6
 
-- **Plant Growth System**
-  - 8-stage growth progression for all plants
-  - Dynamic growth based on light levels
-  - Hemp and Tobacco cultivation alongside weed strains
-  - ABM (Active Block Modifier) based natural growth cycles
+### Original growth cycles
 
-- **Crafting & Processing**
-  - Dry and process weed buds into smokable items
-  - Create Joints and Blunts from dried buds
-  - Extract hemp fiber from mature hemp plants
-  - Craft rope from hemp fiber
-  - Advanced hash production from multiple buds
+- **Named weed strains:** 11 ages (0–10). The plant becomes two blocks tall at age 7; the final four ages use the tall-plant form.
+- **Hemp:** 11 ages (0–10), becomes tall at age 7, and has the original **3.5× natural-growth-speed multiplier**.
+- **Tobacco:** 7 ages (0–6), following the original vanilla CropBlock-style cycle.
+- The natural growth check uses the Forge formula `nextInt(floor(25 / growthSpeed) + 1) == 0`, with Minecraft's default random-tick rate approximated by a server-side Luanti ABM. Actual wall-clock timing can vary with server load and Luanti's ABM scheduling.
+- Weed and hemp natural growth require light level 11; tobacco requires light level 9.
+- The original surrounding-soil and crop-spacing growth-speed factors are applied. Dirt/grass planting remains supported for compatibility with the earlier Luanti port; farmland and supported farming soils provide the proper soil contribution.
 
-- **Infrastructure Blocks**
-  - LED and HPS Grow Lights for optimal cultivation
-  - Grow Pots for indoor growing
-  - Drying Racks for post-harvest processing
-  - Processing Machine with an input/output GUI for drying buds and processing supported recipes
+### Strains and genetics
 
-### Items & Consumables
-- Dried Buds (all strains)
-- Joints (basic rolling)
-- Blunts (tobacco-wrapped)
-- Hemp Oil and Hash
-- Glass Bong
-- Grinder
-- Seeds for all strains
+The 25 original named strain presets are included:
+
+White Widow, Bubble Kush, Lemon Haze, Sour Diesel, Blue Ice, Bubblegum, Purple Haze, OG Kush, Jack Herer, Gary Peyton, Amnesia Haze, AK-47, Ghost Train, Grape Ape, Cotton Candy, Banana Kush, Carbon Fiber, Birthday Cake, Blue Cookies, Afghani, Moonbow, Lava Cake, Jelly Rancher, and Pink Kush.
+
+Each strain has its original THC, CBD, N/P/K target, and preset color data. Newly planted strain crops begin with N/P/K at zero. Bud quality for named weed strains is calculated from the difference between current nutrients and the strain target:
+
+- Exact N/P/K match: THC and CBD are doubled (capped at 100); harvest yield is ×3.
+- All three nutrients within ±3 of target, but not all exact: harvest yield is ×2.
+- Any nutrient more than 3 points from target: base yield is ×1.
+- Off-target THC/CBD is reduced using the original 10%-per-total-nutrient-point formula, with a floor of half the base genetic value (minimum 1).
+
+### Fertilizers
+
+All 17 original fertilizer types are added: Worm Castings, Compost, Mycorrhizae, Dolomite Lime, Blood Meal, Phosphorus Feed, Bat Guano, Kelp Meal, Wood Ash, Bloom Booster, Fruit Finisher, Nitrogen Boost, Potash Boost, Balanced Boost, Phosphorus Reducer, Potassium Reducer, and Fish Emulsion.
+
+Fertilizers modify crop N/P/K directly, clamp each value to 0–100, and cannot be applied to mature crops. Their item descriptions show their nutrient changes. Recipes use available Luanti Game materials and are registered only when the required ingredients exist.
+
+### Plant Analyzer
+
+Craft the Plant Analyzer and right-click a weed, hemp, tobacco crop, or Grow Pot to view its growth age, progress, THC/CBD, current N/P/K, target N/P/K, expected bud multiplier, and pH value.
+
+### Grow Pot
+
+1. Right-click the Grow Pot with a supported soil node item to insert soil.
+2. Plant weed or hemp seeds directly on the pot. Tobacco is not accepted in the Grow Pot, matching the original block behaviour.
+3. With light level 12 or higher, crops complete their cycle in **60 seconds on farmland** or **90 seconds on other inserted soils**.
+4. Fertilizer and bone meal can be applied by right-clicking the pot or its crop. Bone meal advances the crop by a random 2–5 ages.
+5. Right-click a mature Grow Pot crop (or the pot) to harvest it; the planted crop remains and restarts at age 0. Sneak + right-click the empty pot to remove its soil.
+
+### Hemp and lighting
+
+- Fully grown field hemp can be sheared three times for individual Hemp Leaves; the fourth shear harvests the plant. Hemp Leaf and Hemp Fiber are registered harvest items (the original plural `hemp_fibers` ID aliases to the port's existing `hemp_fiber` item).
+- LED and HPS Grow Lights accelerate weed/hemp crops in a 3×3 area up to five blocks below. They make two growth attempts every 100 game ticks (5 seconds), using the original per-attempt growth formula and vertical line-of-sight check. The LED emits light level 15, matching the Forge LED block.
+- Reflectors are ceiling-mounted. Insert an HPS lamp (15 minutes) or Dual Arc lamp (45 minutes). A working reflector emits light level 15 and makes one crop-growth attempt every 100 game ticks. Partially used lamps retain their remaining life when removed.
+- With Elepower PAPI installed, LED/HPS Grow Lights remain disabled until enabled and supplied with Elepower energy (8 EU/s for LED, 16 EU/s for HPS). Without Elepower, they use their standalone ON/OFF behaviour. Reflectors use replaceable lamps, not Elepower.
 
 ## Installation
 
-1. Download the mod folder
-2. Place it in your Luanti mods directory:
-   - Linux: `~/.minetest/mods/`
-   - Windows: `%APPDATA%\Minetest\mods\`
-   - macOS: `~/Library/Application Support/Minetest/mods/`
-3. Enable the mod in your world settings
-4. Create a new world or add to existing world
+1. Back up your world.
+2. Remove the previous `smokyleaf_industry` mod directory before extracting this release. Do not merge old and new files.
+3. Extract the `smokyleaf_industry` directory into your Luanti mods directory.
+4. Enable the mod for your world and restart Luanti.
+5. Check `debug.txt` if the mod does not load.
 
-## Weed Strains Reference
+For Flatpak Luanti on Linux, the usual per-user mods directory is:
 
-### Indica Strains (Fast Growing, Strong Effects)
-- **Purple Kush** - Growth: 80 min | Potency: 0.9
-- **Northern Lights** - Growth: 75 min | Potency: 0.85
-- **Grandmaster Flash** - Growth: 70 min | Potency: 0.8
-- **Strawberry Cough** - Growth: 85 min | Potency: 0.75
-- **Critical Mass** - Growth: 65 min | Potency: 0.95 (Fastest)
-
-### Sativa Strains (Slow Growing, Uplifting)
-- **Sour Diesel** - Growth: 100 min | Potency: 0.8
-- **Jack Herer** - Growth: 95 min | Potency: 0.85
-- **Green Crack** - Growth: 92 min | Potency: 0.75
-- **Pineapple Express** - Growth: 105 min | Potency: 0.8 (Slowest)
-- **Durban Poison** - Growth: 98 min | Potency: 0.7
-
-### Hybrid Strains (Balanced)
-- **OG Kush** - Growth: 85 min | Potency: 0.9
-- **Blue Dream** - Growth: 90 min | Potency: 0.8
-- **Girl Scout Cookies** - Growth: 88 min | Potency: 0.88
-- **Gorilla Glue** - Growth: 82 min | Potency: 0.95
-- **White Widow** - Growth: 87 min | Potency: 0.85
-
-### Specialty Strains
-- **Chemdawg** - Growth: 86 min | Potency: 0.9
-- **AK-47** - Growth: 79 min | Potency: 0.82
-- **Amnesia Haze** - Growth: 108 min | Potency: 0.78
-- **Super Lemon Haze** - Growth: 102 min | Potency: 0.76
-- **Trainwreck** - Growth: 81 min | Potency: 0.88
-- **Skywalker OG** - Growth: 84 min | Potency: 0.92
-- **Bruce Banner** - Growth: 83 min | Potency: 0.91
-- **Wedding Cake** - Growth: 89 min | Potency: 0.93
-- **Midnight Express** - Growth: 76 min | Potency: 0.87
-- **Cherry Pie** - Growth: 91 min | Potency: 0.84
-
-## Basic Progression
-
-1. **Obtain Seeds** - Craft or find weed seeds for your chosen strain
-2. **Plant** - Place seeds on farmland, dirt, or directly on top of a Grow Pot with adequate lighting
-3. **Grow** - Wait for plants to mature through 8 growth stages
-4. **Harvest** - Break mature plants to collect buds
-5. **Dry and process** - Right-click the Drying Rack with an empty hand to open its 12-slot GUI. Place fresh strain buds or tobacco leaves into slots and wait, then collect dried items. The Processing Machine has a separate 3×3 input grid and output slots. With Elepower installed, connect it to an Elepower generator/network; each successful process consumes 64 EU.
-6. **Craft** - Create Joints, Blunts, or Hash for consumption
-7. **Smoke** - Right-click smoking items to activate effects
-
-## Growth Requirements
-
-- **Light Level**: Natural growth requires at least light level 13; active grow lights also periodically accelerate crops directly beneath them
-- **Soil**: Farmland, dirt, or grass blocks
-- **Time**: Varies by strain (65-108 minutes per stage)
-- **Water**: Available automatically near water blocks
-
-## Lighting Options
-
-- **LED Grow Light** - Mount directly beneath a solid ceiling, then right-click to enable; with Elepower installed, connect it to a power network. Active light level 12 and periodic crop-growth acceleration up to five blocks below
-- **HPS Grow Light** - Mount directly beneath a solid ceiling, then right-click to enable; with Elepower installed, connect it to a power network. Active light level 14 and the same crop-growth acceleration
-- **Natural Sunlight** - Free, requires outdoor farming
-
-## Tips for Success
-
-1. **Plant in organized rows** for efficient harvesting
-2. **Use grow lights** to speed up indoor farming
-3. **Separate strains** to avoid genetic mixing
-4. **Build a drying area** near your farm for quick processing
-5. **Experimental farming** - Try different strain combinations
-6. **Consider yield** - Higher yield strains require more resources
-
-## Crafting Recipes
-
-### Joints
-```
-Dried Buds (any strain) + Paper → Joint
+```text
+~/.var/app/org.luanti.luanti/.minetest/mods/
 ```
 
-### Blunts
-```
-Dried Buds (any strain) + Tobacco Leaves → Blunt
-```
+Other installations may use `~/.minetest/mods/` or a world-specific `worldmods` directory.
 
-### Hash
-```
-3x3 grid of Buds (any strain) → Hash
-```
+## Dependencies
 
-### Hemp Rope
-```
-3x Hemp Fiber → Hemp Rope
-```
+- Luanti 5.7 or newer.
+- `default` is recommended for the supplied recipes and item textures.
+- `farming` is optional; common farming soil nodes are recognised when present.
+- `elepower_papi` is optional and enables Elepower integration for the existing processing machine and Grow Lights.
 
-### Dried Buds
-Processing mature plants yields dried buds ready for smoking
+## Compatibility and migration
 
-## File Structure
+- The release includes one-time LBMs for older crops and Grow Pots. Previously mature stage-8 weed/hemp crops are migrated to the new mature age; prior tobacco stage 8 maps to the original mature tobacco age.
+- Older placeholder strain IDs are aliased to the closest matching original preset where a reasonable mapping exists.
+- Keep a backup before updating. As with any crop-node migration, test the update on a copy of an existing world first.
 
-```
-smokeleaf_industries/
-├── init.lua                 # Main mod file with all registrations
-├── mod.conf                 # Mod metadata
-├── README.md               # This file
-├── LICENSE                 # Mod license
-└── textures/
-    ├── blocks/             # Block textures
-    ├── items/              # Item textures
-    └── [texture files]     # Individual PNG files
-```
+## Controls summary
 
-## Texture Requirements
+| Action | Control |
+|---|---|
+| Plant seeds | Right-click dirt/farmland or a soil-filled Grow Pot |
+| Apply fertilizer | Right-click a crop with fertilizer |
+| Use bone meal | Right-click a crop with bone meal |
+| Analyze a plant | Right-click a crop or Grow Pot with Plant Analyzer |
+| Shear hemp | Right-click mature field hemp with shears (three leaf cuts, then harvest) |
+| Harvest Grow Pot | Right-click a mature pot crop or its pot |
+| Remove Grow Pot soil | Sneak + right-click an empty Grow Pot |
+| Toggle Grow Light | Right-click the light |
+| Insert/remove Reflector lamp | Right-click the Reflector with a lamp / empty hand |
 
-The mod requires the following textures (PNG format, 16x16):
-- Weed plant stages (8 variants)
-- Hemp plant stages (8 variants)
-- Tobacco plant stages (8 variants)
-- Bud and dried bud items
-- All 25 strain seed items
-- Infrastructure blocks (lights, racks, machines)
-- Smoking items (joint, blunt)
-- Hemp materials (fiber, rope, oil)
-- Tobacco leaves
+## Validation status
 
-See `textures/README.md` for texture specifications.
-
-## API Functions
-
-### Accessing Strain Information
-```lua
-local strain = smokeleaf_industries.get_strain_info("purple_kush")
--- Returns: {name, title, color, growth_time, potency, effects, yield_multiplier}
-
-local all_strains = smokeleaf_industries.get_all_strains()
--- Returns: Array of all strain tables
-```
-
-### Helper Functions
-```lua
-smokeleaf_industries.is_plant_mature(nodename)
--- Check if plant node is at final growth stage
-
-smokeleaf_industries.get_next_growth_stage(nodename)
--- Get the next growth stage number for a plant
-
-smokeleaf_industries.apply_smoking_effects(player, strain_name)
--- Apply visual/gameplay effects when smoking
-```
-
-## Gameplay Effects
-
-When consuming smoked products:
-- **Relaxation strains** - Slower movement, reduced damage
-- **Energy strains** - Increased movement speed, faster mining
-- **Focus strains** - Enhanced night vision effect
-- **Sleep strains** - Effect duration longer, movement reduced
-- **Creativity strains** - Special visual particle effects
-
-## Multiplayer Considerations
-
-- Mods work on servers with automatic client-side synchronization
-- Plant growth is server-controlled
-- Inventory items are managed per player
-- Smoking effects apply only to consuming player
-
-## Compatibility
-
-- **Minimum Luanti Version**: 5.7.0
-- **Optional Dependencies**: default, farming
-- **Conflicts**: None known
-
-## Performance Notes
-
-- ABM-based growth is optimized for reasonable load
-- 25 strains × 8 stages = 200 node registrations
-- Light-based growth checks reduce unnecessary calculations
-- Recommended for 100+ TPS server performance
-
-## Expanding the Mod
-
-### Adding New Strains
-Edit the `weed_strains` table in `init.lua`:
-```lua
-{
-    name = "my_strain",
-    title = S("My Strain"),
-    color = 0xFFFFFF,
-    growth_time = 80,
-    potency = 0.85,
-    effects = {"relaxation", "happiness"},
-    yield_multiplier = 1.1
-}
-```
-
-### Adding New Crafting Recipes
-Use Luanti's `minetest.register_craft()` in init.lua
-
-### Custom Textures
-Create 16x16 PNG files and place in `textures/` directory
-
-## Known Limitations
-
-- Villager traders not yet implemented (future update)
-- RF/FE power system simplified for Luanti
-- Some Minecraft-specific effects adapted for Luanti mechanics
-- Bong smoking animation is simplified
-
-## Future Updates
-
-- [ ] Villager trader integration
-- [ ] More advanced machine crafting system
-- [ ] Genetic breeding system
-- [ ] Disease and pest management
-- [ ] Seasons integration
-- [ ] Custom potion effects
-- [ ] Mod storage for persistent farm data
+The release package is checked for Lua syntax using the available LuaTeX Lua parser, and the cultivation module is loaded with a mocked Luanti registration API to validate registration order and definitions. This environment does not include a running Luanti server, so real-world crop rendering, multiplayer, Elepower network transfer, and server-tick timing still require in-game testing.
 
 ## Credits
 
-**Original Minecraft Mod**: Micaxs - SmokeleafIndustries
-**Luanti Port**: Community Contribution
-**Translators**: Community volunteers
+- Original gameplay reference: [Micaxs / Smokeleaf Industries](https://github.com/Micaxs/smokeleafindustries)
+- Luanti adaptation: independent Lua implementation for Luanti.
 
-## License
-
-This mod is released under the MIT License. See LICENSE file for details.
-
-## Support & Contributions
-
-- Report bugs on GitHub Issues
-- Suggest features via Discussions
-- Submit textures and improvements via Pull Requests
-- Translations welcome on translation platforms
-
-## FAQ
-
-**Q: Can I use this on a multiplayer server?**
-A: Yes! Install on your server and it works for all players.
-
-**Q: How fast do plants grow?**
-A: Depends on strain. Fastest (Critical Mass) grows in ~65 minutes, slowest (Amnesia Haze) in ~108 minutes.
-
-**Q: Can I trade with villagers?**
-A: Villager system coming in next update. Currently craftable items only.
-
-**Q: Do the effects actually do anything?**
-A: Effects are registered in player metadata. Can be expanded with potion effects or physics modifications.
-
-**Q: Can I automate the farming?**
-A: Yes! Use Luanti's mechanical systems (hopper-like nodes) if compatible mods exist.
-
-**Q: Is this balanced for survival?**
-A: Yes, with progression from seeds → harvesting → crafting → consumption.
-
----
-
-**Last Updated**: October 2026
-**Version**: 1.0.3
-**Status**: Updated port; in-game validation recommended
-
-
-## Grow Light and Drying Rack behavior (v1.0.4)
-
-- Right-click an LED or HPS Grow Light to switch it ON/OFF. OFF lights emit no light; ON lights use their on-state texture. Active lights periodically attempt to accelerate compatible weed, hemp, and tobacco crops in a 3x3 area up to five nodes beneath the lamp; opaque blocks in the crop column prevent acceleration.
-- Right-click the Drying Rack with an empty hand to open its 12-slot interface. It accepts fresh strain buds and tobacco leaves, one item per slot. Buds dry in about 60 seconds; tobacco leaves dry in about 15 seconds. Remove completed items from their slots.
-- The Grow Pot remains a plantable surface: use seeds on the top of the pot to place the crop in the space above it.
-- This release completes the GUI, rack-drying, and grow-light behavior represented by these current Lua blocks. It is not a full one-to-one port of every separate Forge machine and advanced power/strain subsystem in the original Java mod.
-
-
-## Elepower power support (v1.0.4)
-
-Elepower is optional. When `elepower_papi` is enabled, connect the Processing Machine and an enabled grow light to an Elepower power network using Elepower power conduits and a generator/storage node. The Processing Machine uses 64 EU per successful process. LED lights use 8 EU/s and HPS lights use 16 EU/s while enabled. Right-click a light to request power; it will switch off automatically if its buffer runs out, then resume after power is restored. The Drying Rack remains passive and does not need electricity. Without Elepower, the Processing Machine and lights work without a power network as before.
+See `LICENSE` for this port's licence terms.

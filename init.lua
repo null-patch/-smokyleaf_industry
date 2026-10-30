@@ -1,6 +1,6 @@
 -- Smokeleaf Industries - Cannabis Cultivation Mod for Luanti
 -- Ported from Minecraft NeoForge mod
--- Version: 1.0.4
+-- Version: 1.0.6
 
 local S = minetest.get_translator("smokyleaf_industry")
 
@@ -8,10 +8,10 @@ local S = minetest.get_translator("smokyleaf_industry")
 smokyleaf_industry = {}
 
 -- Constants
-local PLANT_GROWTH_STAGES = 8
-local GROWTH_CHANCE = 3 -- 1 in X per ABM cycle
-local HEMP_GROWTH_SPEED_MULTIPLIER = 1.2
-local TOBACCO_GROWTH_SPEED_MULTIPLIER = 1.0
+local PLANT_GROWTH_STAGES = 11 -- Original weed/hemp age 0..10; stage numbers are age + 1
+local WEED_MAX_AGE = 10
+local HEMP_GROWTH_SPEED_MULTIPLIER = 3.5 -- Original BaseWeedCropBlock multiplier
+local TOBACCO_MAX_AGE = 6 -- Original TobaccoCropBlock uses vanilla CropBlock age 0..6
 
 -- Optional Elepower PAPI integration. It is safe to run this mod without Elepower.
 local ELEPOWER_AVAILABLE = minetest.get_modpath("elepower_papi") ~= nil
@@ -48,253 +48,46 @@ local function ele_power_label(pos, usage_label)
 end
 
 -- ============================================================================
--- WEED STRAIN DEFINITIONS
--- ============================================================================
-
+-- ORIGINAL FORGE STRAIN PRESETS
+-- Values below are copied from the original StrainRegistry's preset data.
+-- Natural growth is not strain-timed: all named strains use the same original
+-- CropBlock random-growth formula. Strain data controls genetics and NPK targets.
 local weed_strains = {
-	-- Indica strains (faster, stronger effects)
-	{
-		name = "purple_kush",
-		title = S("Purple Kush"),
-		color = 0x6B0080,
-		growth_time = 80,
-		potency = 0.9,
-		effects = {"relaxation", "sleep"},
-		yield_multiplier = 1.1
-	},
-	{
-		name = "northern_lights",
-		title = S("Northern Lights"),
-		color = 0x87CEEB,
-		growth_time = 75,
-		potency = 0.85,
-		effects = {"relaxation", "happiness"},
-		yield_multiplier = 1.05
-	},
-	{
-		name = "grandmaster_flash",
-		title = S("Grandmaster Flash"),
-		color = 0x32CD32,
-		growth_time = 70,
-		potency = 0.8,
-		effects = {"happiness", "focus"},
-		yield_multiplier = 1.2
-	},
-	{
-		name = "strawberry_cough",
-		title = S("Strawberry Cough"),
-		color = 0xFF6347,
-		growth_time = 85,
-		potency = 0.75,
-		effects = {"creativity", "energy"},
-		yield_multiplier = 1.15
-	},
-	{
-		name = "critical_mass",
-		title = S("Critical Mass"),
-		color = 0x228B22,
-		growth_time = 65,
-		potency = 0.95,
-		effects = {"relaxation", "pain_relief"},
-		yield_multiplier = 1.25
-	},
-	
-	-- Sativa strains (slower, uplifting)
-	{
-		name = "sour_diesel",
-		title = S("Sour Diesel"),
-		color = 0xFFD700,
-		growth_time = 100,
-		potency = 0.8,
-		effects = {"energy", "focus"},
-		yield_multiplier = 0.95
-	},
-	{
-		name = "jack_herer",
-		title = S("Jack Herer"),
-		color = 0x90EE90,
-		growth_time = 95,
-		potency = 0.85,
-		effects = {"creativity", "happiness"},
-		yield_multiplier = 1.0
-	},
-	{
-		name = "green_crack",
-		title = S("Green Crack"),
-		color = 0x32CD32,
-		growth_time = 92,
-		potency = 0.75,
-		effects = {"energy", "focus"},
-		yield_multiplier = 1.05
-	},
-	{
-		name = "pineapple_express",
-		title = S("Pineapple Express"),
-		color = 0xFFB347,
-		growth_time = 105,
-		potency = 0.8,
-		effects = {"energy", "creativity"},
-		yield_multiplier = 1.1
-	},
-	{
-		name = "durban_poison",
-		title = S("Durban Poison"),
-		color = 0x98FB98,
-		growth_time = 98,
-		potency = 0.7,
-		effects = {"energy", "focus"},
-		yield_multiplier = 1.15
-	},
-	
-	-- Hybrid strains (balanced)
-	{
-		name = "og_kush",
-		title = S("OG Kush"),
-		color = 0x556B2F,
-		growth_time = 85,
-		potency = 0.9,
-		effects = {"relaxation", "happiness"},
-		yield_multiplier = 1.2
-	},
-	{
-		name = "blue_dream",
-		title = S("Blue Dream"),
-		color = 0x4169E1,
-		growth_time = 90,
-		potency = 0.8,
-		effects = {"relaxation", "creativity"},
-		yield_multiplier = 1.1
-	},
-	{
-		name = "girl_scout_cookies",
-		title = S("Girl Scout Cookies"),
-		color = 0x8B4513,
-		growth_time = 88,
-		potency = 0.88,
-		effects = {"relaxation", "happiness"},
-		yield_multiplier = 1.15
-	},
-	{
-		name = "gorilla_glue",
-		title = S("Gorilla Glue"),
-		color = 0x696969,
-		growth_time = 82,
-		potency = 0.95,
-		effects = {"relaxation", "sleep"},
-		yield_multiplier = 1.2
-	},
-	{
-		name = "white_widow",
-		title = S("White Widow"),
-		color = 0xF0F8FF,
-		growth_time = 87,
-		potency = 0.85,
-		effects = {"relaxation", "focus"},
-		yield_multiplier = 1.12
-	},
-	
-	-- Specialty strains
-	{
-		name = "chemdawg",
-		title = S("Chemdawg"),
-		color = 0xDAA520,
-		growth_time = 86,
-		potency = 0.9,
-		effects = {"energy", "focus"},
-		yield_multiplier = 1.08
-	},
-	{
-		name = "ak_47",
-		title = S("AK-47"),
-		color = 0x2F4F4F,
-		growth_time = 79,
-		potency = 0.82,
-		effects = {"relaxation", "happiness"},
-		yield_multiplier = 1.18
-	},
-	{
-		name = "amnesia_haze",
-		title = S("Amnesia Haze"),
-		color = 0xF5DEB3,
-		growth_time = 108,
-		potency = 0.78,
-		effects = {"energy", "creativity"},
-		yield_multiplier = 0.98
-	},
-	{
-		name = "super_lemon_haze",
-		title = S("Super Lemon Haze"),
-		color = 0xFFFF00,
-		growth_time = 102,
-		potency = 0.76,
-		effects = {"energy", "happiness"},
-		yield_multiplier = 1.0
-	},
-	{
-		name = "trainwreck",
-		title = S("Trainwreck"),
-		color = 0xCD853F,
-		growth_time = 81,
-		potency = 0.88,
-		effects = {"energy", "focus"},
-		yield_multiplier = 1.13
-	},
-	
-	-- Additional strains
-	{
-		name = "skywalker_og",
-		title = S("Skywalker OG"),
-		color = 0x191970,
-		growth_time = 84,
-		potency = 0.92,
-		effects = {"relaxation", "sleep"},
-		yield_multiplier = 1.19
-	},
-	{
-		name = "bruce_banner",
-		title = S("Bruce Banner"),
-		color = 0x006400,
-		growth_time = 83,
-		potency = 0.91,
-		effects = {"relaxation", "energy"},
-		yield_multiplier = 1.21
-	},
-	{
-		name = "wedding_cake",
-		title = S("Wedding Cake"),
-		color = 0xE6E6FA,
-		growth_time = 89,
-		potency = 0.93,
-		effects = {"relaxation", "happiness"},
-		yield_multiplier = 1.17
-	},
-	{
-		name = "midnight_express",
-		title = S("Midnight Express"),
-		color = 0x2C2C2C,
-		growth_time = 76,
-		potency = 0.87,
-		effects = {"relaxation", "sleep"},
-		yield_multiplier = 1.16
-	},
-	{
-		name = "cherry_pie",
-		title = S("Cherry Pie"),
-		color = 0xC71585,
-		growth_time = 91,
-		potency = 0.84,
-		effects = {"relaxation", "happiness"},
-		yield_multiplier = 1.09
-	},
+	{name="white_widow", title=S("White Widow"), color=0xBAC2A9, leaf_color=0xB7D977, thc=15, cbd=10, n=9, p=6, k=11, effects={"wind_charged"}},
+	{name="bubble_kush", title=S("Bubble Kush"), color=0xC2A756, leaf_color=0xD7D04E, thc=20, cbd=5, n=10, p=8, k=16, effects={"strength"}},
+	{name="lemon_haze", title=S("Lemon Haze"), color=0xB7C558, leaf_color=0xB1E058, thc=19, cbd=6, n=9, p=12, k=15, effects={"speed"}},
+	{name="sour_diesel", title=S("Sour Diesel"), color=0xFF797B, leaf_color=0xE2B7A0, thc=19, cbd=6, n=11, p=13, k=10, effects={"haste"}},
+	{name="blue_ice", title=S("Blue Ice"), color=0x89C59F, leaf_color=0xB0E05B, thc=20, cbd=5, n=14, p=9, k=14, effects={"night_vision"}},
+	{name="bubblegum", title=S("Bubblegum"), color=0xC18359, leaf_color=0xD4D825, thc=17, cbd=8, n=14, p=14, k=12, effects={"health_boost"}},
+	{name="purple_haze", title=S("Purple Haze"), color=0xE179FF, leaf_color=0xE0B7A8, thc=16, cbd=9, n=11, p=13, k=7, effects={"luck"}},
+	{name="og_kush", title=S("OG Kush"), color=0xADDE88, leaf_color=0xC5D853, thc=25, cbd=10, n=12, p=13, k=15, effects={"resistance"}},
+	{name="jack_herer", title=S("Jack Herer"), color=0xDEC38B, leaf_color=0xE4D419, thc=18, cbd=7, n=10, p=15, k=10, effects={"r_trees"}},
+	{name="gary_peyton", title=S("Gary Peyton"), color=0xD6C4A2, leaf_color=0xB9D977, thc=22, cbd=3, n=14, p=15, k=9, effects={"uplifted"}},
+	{name="amnesia_haze", title=S("Amnesia Haze"), color=0xC7DA89, leaf_color=0xB8DA75, thc=19, cbd=6, n=10, p=13, k=9, effects={"zombified"}},
+	{name="ak47", title=S("AK-47"), color=0xD2D77F, leaf_color=0xEAC848, thc=19, cbd=6, n=17, p=8, k=11, effects={"relaxed"}},
+	{name="ghost_train", title=S("Ghost Train"), color=0xCEBA9B, leaf_color=0xFFBB42, thc=19, cbd=6, n=13, p=12, k=10, effects={"shy"}},
+	{name="grape_ape", title=S("Grape Ape"), color=0xA6D0BB, leaf_color=0xD6C29E, thc=18, cbd=7, n=15, p=13, k=15, effects={"aroused"}},
+	{name="cotton_candy", title=S("Cotton Candy"), color=0xD797CB, leaf_color=0xC4C898, thc=19, cbd=6, n=10, p=13, k=9, effects={"chillout"}},
+	{name="banana_kush", title=S("Banana Kush"), color=0xE1CE7A, leaf_color=0xB9CDAB, thc=21, cbd=4, n=15, p=13, k=15, effects={"sticky_icky"}},
+	{name="carbon_fiber", title=S("Carbon Fiber"), color=0xA1B8D0, leaf_color=0xBAC6C5, thc=24, cbd=1, n=14, p=13, k=20, effects={"vein_high"}},
+	{name="birthday_cake", title=S("Birthday Cake"), color=0xAAD198, leaf_color=0xC5CB93, thc=23, cbd=2, n=11, p=13, k=16, effects={"oozing"}},
+	{name="blue_cookies", title=S("Blue Cookies"), color=0x84B7B9, leaf_color=0xC2CA95, thc=17, cbd=8, n=10, p=13, k=9, effects={"linguists_high"}},
+	{name="afghani", title=S("Afghani"), color=0xD5915E, leaf_color=0xEBC445, thc=18, cbd=7, n=11, p=10, k=19, effects={"bad_omen"}},
+	{name="moonbow", title=S("Moonbow"), color=0xC1D97C, leaf_color=0xC3E12C, thc=30, cbd=13, n=15, p=2, k=22, effects={"night_vision"}},
+	{name="lava_cake", title=S("Lava Cake"), color=0xE27661, leaf_color=0xC4A017, thc=22, cbd=3, n=14, p=12, k=11, effects={"glowing"}},
+	{name="jelly_rancher", title=S("Jelly Rancher"), color=0xDACE72, leaf_color=0xD5B51B, thc=20, cbd=5, n=11, p=14, k=9, effects={"dolphins_grace"}},
+	{name="strawberry_shortcake", title=S("Strawberry Shortcake"), color=0x93A6C9, leaf_color=0xC4A27C, thc=16, cbd=9, n=14, p=11, k=15, effects={"high_flyer"}},
+	{name="pink_kush", title=S("Pink Kush"), color=0xD3A8A7, leaf_color=0xDED713, thc=19, cbd=6, n=17, p=9, k=12, effects={"regeneration"}},
 }
 
--- Store strain data for lookup
+-- Store strain data for lookup and retain the old public API shape.
 smokyleaf_industry.strains = {}
 for _, strain in ipairs(weed_strains) do
+	strain.potency = strain.thc / 100
+	strain.yield_multiplier = 1.0 -- Yield is now calculated by the original NPK rules.
 	smokyleaf_industry.strains[strain.name] = strain
 end
 
--- ============================================================================
 -- Shared planting logic for all seed types.
 -- Prefer the standard "soil" group so farmland and third-party soil nodes work
 -- without depending on one specific game or node namespace.
@@ -330,10 +123,23 @@ local function plant_seed(itemstack, user, pointed_thing, plant_node_name)
 	local under_pos = pointed_thing.under
 	local under_node = minetest.get_node(under_pos)
 	local plant_pos
+	local pot_under = under_node.name == "smokyleaf_industry:grow_pot"
 
 	-- Normal Luanti interaction: under is the soil block and above is the
 	-- adjacent block where the plant belongs.
 	if is_plantable_surface(under_pos) then
+		if under_node.name == "smokyleaf_industry:grow_pot" then
+			local pot_meta = minetest.get_meta(under_pos)
+			local pot_soil = pot_meta:get_string("pot_soil")
+			if pot_soil == "" then
+				if user then minetest.chat_send_player(user:get_player_name(), S("Insert soil into the Grow Pot before planting.")) end
+				return itemstack
+			end
+			if plant_node_name == "smokyleaf_industry:tobacco_1" then
+				if user then minetest.chat_send_player(user:get_player_name(), S("The Grow Pot supports weed and hemp crops, not tobacco.")) end
+				return itemstack
+			end
+		end
 		plant_pos = pointed_thing.above or {
 			x = under_pos.x,
 			y = under_pos.y + 1,
@@ -355,6 +161,12 @@ local function plant_seed(itemstack, user, pointed_thing, plant_node_name)
 	end
 
 	local target_node = minetest.get_node(plant_pos)
+	-- A planted Grow Pot crop is itself buildable_to in Luanti. Never allow a
+	-- second seed to replace it merely because the crop node is replaceable.
+	if pot_under and target_node.name ~= "air" then
+		if user then minetest.chat_send_player(user:get_player_name(), S("The Grow Pot already contains a crop or its planting space is obstructed.")) end
+		return itemstack
+	end
 	if target_node.name ~= "air"
 		and minetest.get_item_group(target_node.name, "buildable_to") == 0 then
 		return itemstack
@@ -371,12 +183,37 @@ local function plant_seed(itemstack, user, pointed_thing, plant_node_name)
 	end
 
 	minetest.set_node(plant_pos, {name = plant_node_name})
+	-- Persist original strain genetics and per-plant cultivation state on the
+	-- bottom crop node. N/P/K starts at zero, as in the Forge BlockEntity.
+	local crop_meta = minetest.get_meta(plant_pos)
+	crop_meta:set_string("cultivation_schema", "2")
+	crop_meta:set_int("growth_age", 0)
+	crop_meta:set_int("ph", 0)
+	crop_meta:set_int("nitrogen", 0)
+	crop_meta:set_int("phosphorus", 0)
+	crop_meta:set_int("potassium", 0)
+	crop_meta:set_int("hemp_shear_count", 0)
+	crop_meta:set_float("pot_growth_progress", 0)
+	local strain_id = plant_node_name:match("^smokyleaf_industry:weed_(.+)_1$")
+	local family = strain_id and "weed" or (plant_node_name:match("hemp_1$") and "hemp" or "tobacco")
+	crop_meta:set_string("crop_family", family)
+	crop_meta:set_string("strain_id", strain_id or "")
+	local strain_data = strain_id and smokyleaf_industry.strains[strain_id] or nil
+	crop_meta:set_int("ph", (family == "hemp" or pot_under) and 7 or 0)
+	crop_meta:set_int("thc", strain_data and strain_data.thc or 0)
+	crop_meta:set_int("cbd", strain_data and strain_data.cbd or 0)
+	crop_meta:set_int("growpot", pot_under and 1 or 0)
+	if pot_under then
+		crop_meta:set_string("growpot_soil", minetest.get_meta(under_pos):get_string("pot_soil"))
+	end
 	minetest.sound_play("default_dig_snappy", {
 		pos = plant_pos,
 		max_hear_distance = 8,
 		gain = 0.5,
 	})
-	itemstack:take_item()
+	local creative = user and type(user.is_player) == "function" and user:is_player()
+		and minetest.is_creative_enabled and minetest.is_creative_enabled(user:get_player_name())
+	if not creative then itemstack:take_item() end
 	return itemstack
 end
 
@@ -429,8 +266,22 @@ minetest.register_craftitem("smokyleaf_industry:hemp_fiber", {
 	description = S("Hemp Fiber"),
 	inventory_image = "smokyleaf_industry_hemp_fiber.png",
 	stack_max = 64,
-	groups = {flammable = 2},
+	groups = {flammable = 2, hemp_material = 1},
 })
+
+-- The original harvest and Hemp shearing cycles both produce individual leaves.
+minetest.register_craftitem("smokyleaf_industry:hemp_leaf", {
+	description = S("Hemp Leaf"),
+	inventory_image = "smokyleaf_industry_hemp_leaf.png",
+	stack_max = 64,
+	groups = {flammable = 2, hemp_material = 1},
+})
+
+-- Original Forge used the plural registry name. Keep it as an alias while the
+-- earlier Luanti port's singular hemp_fiber ID remains the canonical item.
+if minetest.register_alias then
+	minetest.register_alias("smokyleaf_industry:hemp_fibers", "smokyleaf_industry:hemp_fiber")
+end
 
 minetest.register_craftitem("smokyleaf_industry:hemp_rope", {
 	description = S("Hemp Rope"),
@@ -530,17 +381,17 @@ minetest.register_craftitem("smokyleaf_industry:grinder", {
 -- NODE REGISTRATION - WEED PLANTS
 -- ============================================================================
 
--- Register weed plants for each strain (8 growth stages)
+-- Register the original 11 ages (0..10) for every named strain.
 for _, strain in ipairs(weed_strains) do
 	for stage = 1, PLANT_GROWTH_STAGES do
 		local nodename = "smokyleaf_industry:weed_" .. strain.name .. "_" .. stage
-		local next_stage = stage < PLANT_GROWTH_STAGES and stage + 1 or stage
+		local texture_stage = math.min(stage, 8)
 
 		minetest.register_node(nodename, {
-			description = strain.title .. S(" (Stage ") .. stage .. S("/") .. PLANT_GROWTH_STAGES .. S(")"),
+			description = strain.title .. S(" (Age ") .. (stage - 1) .. S("/10)"),
 			drawtype = "plantlike",
-			tiles = {"smokyleaf_industry_weed_" .. stage .. ".png"},
-			inventory_image = "smokyleaf_industry_weed_" .. stage .. ".png",
+			tiles = {"smokyleaf_industry_weed_" .. texture_stage .. ".png^[colorize:#" .. string.format("%06X", strain.color) .. ":18"},
+			inventory_image = "smokyleaf_industry_weed_" .. texture_stage .. ".png",
 			paramtype = "light",
 			paramtype2 = "meshoptions",
 			place_param2 = 0,
@@ -569,9 +420,9 @@ end
 
 for stage = 1, PLANT_GROWTH_STAGES do
 	minetest.register_node("smokyleaf_industry:hemp_" .. stage, {
-		description = S("Hemp Plant (Stage ") .. stage .. S("/") .. PLANT_GROWTH_STAGES .. S(")"),
+		description = S("Hemp Plant (Age ") .. (stage - 1) .. S("/10)"),
 		drawtype = "plantlike",
-		tiles = {"smokyleaf_industry_hemp_" .. stage .. ".png"},
+		tiles = {"smokyleaf_industry_hemp_" .. math.min(stage, 8) .. ".png"},
 		inventory_image = "smokyleaf_industry_hemp_stage.png",
 		paramtype = "light",
 		paramtype2 = "meshoptions",
@@ -598,9 +449,9 @@ end
 -- NODE REGISTRATION - TOBACCO PLANTS
 -- ============================================================================
 
-for stage = 1, PLANT_GROWTH_STAGES do
+for stage = 1, (TOBACCO_MAX_AGE + 1) do
 	minetest.register_node("smokyleaf_industry:tobacco_" .. stage, {
-		description = S("Tobacco Plant (Stage ") .. stage .. S("/") .. PLANT_GROWTH_STAGES .. S(")"),
+		description = S("Tobacco Plant (Age ") .. (stage - 1) .. S("/6)"),
 		drawtype = "plantlike",
 		tiles = {"smokyleaf_industry_tobacco_" .. stage .. ".png"},
 		inventory_image = "smokyleaf_industry_tobacco_stage.png",
@@ -838,79 +689,11 @@ local function register_grow_light(kind, label, texture_prefix, light_level)
 	end
 end
 
-register_grow_light("led", S("LED Grow Light"), "led_light", 12)
+register_grow_light("led", S("LED Grow Light"), "led_light", 15)
 register_grow_light("hps", S("HPS Grow Light"), "hps_light", 14)
 
--- The original GrowLightBlockEntity checks a 3x3 area up to five blocks below the
--- light every 100 ticks. This native ABM reproduces that behavior by accelerating
--- two randomly selected crops per cycle with a lower per-attempt chance.
-local function next_crop_stage(name)
-	local strain, stage = name:match("^smokyleaf_industry:weed_(.+)_(%d+)$")
-	if strain then
-		stage = tonumber(stage)
-		if stage and stage < PLANT_GROWTH_STAGES then
-			return "smokyleaf_industry:weed_" .. strain .. "_" .. (stage + 1)
-		end
-		return nil
-	end
-	local crop_kind, crop_stage = name:match("^smokyleaf_industry:(hemp)_(%d+)$")
-	if not crop_kind then crop_kind, crop_stage = name:match("^smokyleaf_industry:(tobacco)_(%d+)$") end
-	if crop_kind then
-		crop_stage = tonumber(crop_stage)
-		if crop_stage and crop_stage < PLANT_GROWTH_STAGES then
-			return "smokyleaf_industry:" .. crop_kind .. "_" .. (crop_stage + 1)
-		end
-	end
-	return nil
-end
-
-local function grow_light_line_clear(light_pos, crop_pos)
-	for y = light_pos.y - 1, crop_pos.y + 1, -1 do
-		local mid = {x = crop_pos.x, y = y, z = crop_pos.z}
-		if y > crop_pos.y then
-			local node = minetest.get_node(mid)
-			local def = minetest.registered_nodes[node.name]
-			if def and def.walkable ~= false then return false end
-		end
-	end
-	return true
-end
-
-minetest.register_abm({
-	label = "Smokeleaf grow light acceleration",
-	nodenames = {
-		"smokyleaf_industry:grow_light_led_on",
-		"smokyleaf_industry:grow_light_hps_on",
-	},
-	interval = 5,
-	chance = 1,
-	action = function(pos)
-		local candidates = {}
-		for dx = -1, 1 do
-			for dz = -1, 1 do
-				for depth = 1, 5 do
-					local crop_pos = {x = pos.x + dx, y = pos.y - depth, z = pos.z + dz}
-					local crop_node = minetest.get_node(crop_pos)
-					if next_crop_stage(crop_node.name) and grow_light_line_clear(pos, crop_pos) then
-						candidates[#candidates + 1] = {pos = crop_pos, node = crop_node}
-					end
-				end
-			end
-		end
-		local attempts = math.min(2, #candidates)
-		for _ = 1, attempts do
-			local index = math.random(1, #candidates)
-			local candidate = table.remove(candidates, index)
-			-- Two attempts per cycle, matching the original light's growth tick loop.
-			if math.random(1, 3) == 1 then
-				local new_name = next_crop_stage(candidate.node.name)
-				if new_name then
-					minetest.set_node(candidate.pos, {name = new_name, param2 = candidate.node.param2 or 0})
-				end
-			end
-		end
-	end,
-})
+-- Grow-light crop acceleration is registered by cultivation.lua using the original
+-- 100-game-tick interval, two attempts, and crop growth probability.
 
 -- Drying Rack inventory. Unlike the machine screens in Forge, the original rack is
 -- a twelve-position drying surface with items inserted and retrieved directly. This
@@ -1263,7 +1046,7 @@ local function processing_machine_process(pos, player)
 	end
 
 	-- Mature hemp block item -> hemp fiber (when the game makes that block collectible).
-	ok, reason = machine_try_recipe(inv, { ["smokyleaf_industry:hemp_8"] = 1 }, "smokyleaf_industry:hemp_fiber", 3, pos)
+	ok, reason = machine_try_recipe(inv, { ["smokyleaf_industry:hemp_11"] = 1 }, "smokyleaf_industry:hemp_fiber", 3, pos)
 	if ok then return true end
 	if reason == "output_full" then return false, reason end
 	return false, "no_recipe"
@@ -1397,17 +1180,7 @@ minetest.register_lbm({
 -- CRAFTING RECIPES
 -- ============================================================================
 
--- Hemp fiber from hemp (drying process)
-for stage = 1, PLANT_GROWTH_STAGES do
-	if stage == PLANT_GROWTH_STAGES then
-		minetest.register_craft({
-			output = "smokyleaf_industry:hemp_fiber 3",
-			recipe = {
-				{"smokyleaf_industry:hemp_" .. stage}
-			}
-		})
-	end
-end
+-- Mature hemp drops hemp fiber and hemp leaves directly, as in the Forge loot table.
 
 -- Hemp rope from hemp fiber
 minetest.register_craft({
@@ -1450,81 +1223,9 @@ for _, strain in ipairs(weed_strains) do
 end
 
 -- ============================================================================
--- ABM (Active Block Modifier) - PLANT GROWTH
--- ============================================================================
+-- Original Minecraft crop growth, NPK quality, fertilizer, grow-pot, and
+-- reflector mechanics are registered in cultivation.lua.
 
--- Weed plant growth. Capture this iteration's strain and stage for Lua 5.1/LuaJIT.
-for _, strain in ipairs(weed_strains) do
-	local strain_name = strain.name
-	local strain_growth_time = strain.growth_time
-	for stage = 1, PLANT_GROWTH_STAGES - 1 do
-		local current_stage = stage
-		minetest.register_abm({
-			label = "Weed growth - " .. strain_name .. " stage " .. current_stage,
-			nodenames = {"smokyleaf_industry:weed_" .. strain_name .. "_" .. current_stage},
-			neighbors = {"group:soil", "default:dirt", "default:dirt_with_grass", "smokyleaf_industry:grow_pot"},
-			interval = strain_growth_time * 10,
-			chance = GROWTH_CHANCE,
-			action = function(pos, node, active_object_count, active_object_count_wider)
-				local light = minetest.get_node_light(pos)
-				if light and light >= 13 then
-					minetest.set_node(pos, {name = "smokyleaf_industry:weed_" .. strain_name .. "_" .. (current_stage + 1)})
-				end
-			end,
-		})
-	end
-
-	-- Harvest - mature stage gives buds
-	minetest.register_abm({
-		label = "Weed harvest - " .. strain_name,
-		nodenames = {"smokyleaf_industry:weed_" .. strain_name .. "_" .. PLANT_GROWTH_STAGES},
-		neighbors = {"group:soil", "default:dirt", "default:dirt_with_grass", "smokyleaf_industry:grow_pot"},
-		interval = 300,
-		chance = 5,
-		action = function(pos, node, active_object_count, active_object_count_wider)
-			local meta = minetest.get_meta(pos)
-			meta:set_int("buds", meta:get_int("buds") + 1)
-		end,
-	})
-end
-
--- Hemp plant growth
-for stage = 1, PLANT_GROWTH_STAGES - 1 do
-	local current_stage = stage
-	minetest.register_abm({
-		label = "Hemp growth stage " .. current_stage,
-		nodenames = {"smokyleaf_industry:hemp_" .. current_stage},
-		neighbors = {"group:soil", "default:dirt", "default:dirt_with_grass", "smokyleaf_industry:grow_pot"},
-		interval = math.floor(80 * 10 / HEMP_GROWTH_SPEED_MULTIPLIER),
-		chance = GROWTH_CHANCE,
-		action = function(pos, node, active_object_count, active_object_count_wider)
-			local light = minetest.get_node_light(pos)
-			if light and light >= 13 then
-				minetest.set_node(pos, {name = "smokyleaf_industry:hemp_" .. (current_stage + 1)})
-			end
-		end,
-	})
-end
-
--- Tobacco plant growth
-for stage = 1, PLANT_GROWTH_STAGES - 1 do
-	local current_stage = stage
-	minetest.register_abm({
-		label = "Tobacco growth stage " .. current_stage,
-		nodenames = {"smokyleaf_industry:tobacco_" .. current_stage},
-		neighbors = {"group:soil", "default:dirt", "default:dirt_with_grass", "smokyleaf_industry:grow_pot"},
-		interval = math.floor(85 * 10 / TOBACCO_GROWTH_SPEED_MULTIPLIER),
-		chance = GROWTH_CHANCE,
-		action = function(pos, node, active_object_count, active_object_count_wider)
-			local light = minetest.get_node_light(pos)
-			if light and light >= 13 then
-				minetest.set_node(pos, {name = "smokyleaf_industry:tobacco_" .. (current_stage + 1)})
-			end
-		end,
-	})
-end
-
--- ============================================================================
 -- HELPER FUNCTIONS
 -- ============================================================================
 
@@ -1538,21 +1239,27 @@ function smokyleaf_industry.get_all_strains()
 	return weed_strains
 end
 
--- Check if plant is mature
-function smokyleaf_industry.is_plant_mature(nodename)
-	local stage = tonumber(nodename:match("_(%d+)$"))
-	if not stage then return false end
-	return stage == PLANT_GROWTH_STAGES
+-- Crop family-specific stage helpers: weed/hemp ages 0..10 (11 nodes),
+-- tobacco ages 0..6 (7 nodes).
+local function crop_max_stage_for_name(nodename)
+	if nodename:match("^smokyleaf_industry:tobacco_%d+$") then return TOBACCO_MAX_AGE + 1 end
+	if nodename:match("^smokyleaf_industry:hemp_%d+$") or nodename:match("^smokyleaf_industry:weed_.+_%d+$") then
+		return PLANT_GROWTH_STAGES
+	end
+	return nil
 end
 
--- Get next growth stage
+function smokyleaf_industry.is_plant_mature(nodename)
+	local stage = tonumber(nodename:match("_(%d+)$"))
+	local max_stage = crop_max_stage_for_name(nodename)
+	return stage ~= nil and max_stage ~= nil and stage == max_stage
+end
+
 function smokyleaf_industry.get_next_growth_stage(nodename)
 	local stage = tonumber(nodename:match("_(%d+)$"))
-	if not stage then return nil end
-	if stage < PLANT_GROWTH_STAGES then
-		return stage + 1
-	end
-	return stage
+	local max_stage = crop_max_stage_for_name(nodename)
+	if not stage or not max_stage then return nil end
+	return math.min(max_stage, stage + 1)
 end
 
 -- ============================================================================
@@ -1581,3 +1288,6 @@ local function apply_smoking_effects(player, strain_name)
 end
 
 smokyleaf_industry.apply_smoking_effects = apply_smoking_effects
+
+-- Load the complete original-style cultivation subsystem after base items/nodes exist.
+dofile(minetest.get_modpath("smokyleaf_industry") .. "/cultivation.lua")
